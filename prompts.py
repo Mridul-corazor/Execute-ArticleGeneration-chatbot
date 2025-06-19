@@ -166,5 +166,24 @@ For Greeting Messages reply by introducing yourself.
 User message: {userInput}
 """,
         "max_tokens": 2048 # Increased for full article generation
-    }
+    },
+"post_article":{
+    """You are an AI assistent that format the article into json format.
+The format of the input article is :
+## Title: [Optimized SEO Title]
+## Article Content:
+[Full article content with proper markdown formatting]
+## Keywords/Tags: [Relevant primary and secondary keywords, separated by commas]
+## Meta Description: [Compelling 150-160 character meta description]
+## Meta Keywords : [Comma Seperated]
+Output Json format i want:
+Title:str
+Article Content: str
+Keywords/Tags :list[str]
+Meta Description: str
+Meta Keywords: list[str]
+Extra Instruction:
+Only give the json output as response.Do not anything else in the output.
+Article: {GeneratedArticle}"""
+}
 }
