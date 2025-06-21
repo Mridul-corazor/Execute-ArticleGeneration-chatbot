@@ -1,8 +1,33 @@
 PROMPTS = {
     "summary": {
         "system_instruction": "You are a helpful assistant specialized in summarizing text.",
-        "prompt": "Summarize the following text that should be an article or an insightful comment in 3–5 concise bullet points and for insightful comment as comment are short so you just give brief about it., focusing on the main arguments and conclusions.\n\nText:\n---\n{text}\n---",
-        "max_tokens": 150
+        "prompt": ("Summarize the following text into minimum 80-100 words and give maximum words according to text given by user that should be an article or an insightful comment and for insightful comment as comment are short so you just give brief about it., focusing on the main arguments and conclusions.\n\nText:\n---\n{text}\n---"
+                  "Output format: Summary -> str"),
+        "max_tokens": 1000
+    },
+    "overview": {
+    "system_instruction": "You are a helpful assistant specialized in providing concise overviews of articles.",
+    "prompt": (
+        "Write a clear and concise overview of the following article. "
+        "The overview should capture the main topic, key points, and the overall purpose or takeaway of the article. "
+        "Keep it brief (3-5 sentences) and suitable for someone who wants a quick understanding of what the article covers.\n\n"
+        "ARTICLE:\n---\n{text}\n---\n"
+        "Output format: Overview -> str"
+    ),
+    "max_tokens": 300
+},
+    "category_title_generation":{
+        "system_instruction":"You are a helpful assistant specialized in generating SEO-optimized titles.",
+        "prompt": ("Generate minimum 3 and maximum 8 SEO-optimized titles for an article about: '{category}'. "
+                  "The titles should be catchy, suitable for the target audience, and optimized for search engines. "
+                  "Respond ONLY with a numbered list of titles, nothing else—no explanations, no introductions, no extra text. "
+                  "Format:\n"
+                  "1. Title One\n"
+                  "2. Title Two\n"
+                  "3. Title Three\n"
+                  "4. Title Four\n"
+                  "5. Title Five"),
+        "max_tokens": 200
     },
     "suggest_topics": {
     "system_instruction": "You are a content strategist.",
@@ -29,21 +54,21 @@ PROMPTS = {
         "prompt": "You are a helpful assistant. Answer the following question based *only* on the provided article context. If the answer is not in the article, state that clearly and do not provide an answer from your own knowledge.If the text of article is empty or not provided Reply with the text is not provided.\n\nARTICLE:\n---\n{text}\n---\n\nQUESTION: {question}",
         "max_tokens": 150
     },
-    "generate_titles": {
-    "system_instruction": "You are an expert SEO copywriter.",
-    "prompt": (
-        "You are an expert SEO copywriter. Generate exactly 5 compelling, keyword-rich titles for an article about: '{description}'. "
-        "The titles should be catchy, suitable for the target audience, and optimized for search engines. "
-        "Respond ONLY with a numbered list of titles, nothing else—no explanations, no introductions, no extra text. "
-        "Format:\n"
-        "1. Title One\n"
-        "2. Title Two\n"
-        "3. Title Three\n"
-        "4. Title Four\n"
-        "5. Title Five"
-    ),
-    "max_tokens": 150
-},
+#     "generate_titles": {
+#     "system_instruction": "You are an expert SEO copywriter.",
+#     "prompt": (
+#         "You are an expert SEO copywriter. Generate exactly 5 compelling, keyword-rich titles for an article about: '{description}'. "
+#         "The titles should be catchy, suitable for the target audience, and optimized for search engines. "
+#         "Respond ONLY with a numbered list of titles, nothing else—no explanations, no introductions, no extra text. "
+#         "Format:\n"
+#         "1. Title One\n"
+#         "2. Title Two\n"
+#         "3. Title Three\n"
+#         "4. Title Four\n"
+#         "5. Title Five"
+#     ),
+#     "max_tokens": 150
+# },
     "generate_blog_ideas": {
     "system_instruction": "You are a senior content planner.",
     "prompt": (
@@ -148,6 +173,12 @@ Before Step 2: Confirm topic and industry are provided
 Before Step 3: Confirm title is selected/provided
 Before Step 4: Confirm blog idea is selected/provided
 Never skip steps - Always complete the sequence
+
+Special Handling for User Requests:
+- for question "Do you want to regenerate new article?", restart from STEP 4 and generate a new article based on the last selected blog idea.Regenerate the article again for user and show the resonse in format Article Generated: .
+- for question "Do you want to improve this article?", enhance the existing article for clarity, SEO, or depth, and present the improved version.Do not ask any cross question to user.For this question Output format is Improved Article: .
+- for question "Do you want to rewrite for another industry or topic?" , restart from STEP 1 and prompt for the new industry or topic.
+- for question "Do you want to opt for another title or blog ideas?", return to the relevant step (STEP 2 or STEP 3) and present new options as needed.
 Response Format:
 Clearly indicate which step you're on: "STEP X: [Step Name]"
 Use clear calls-to-action for user input
@@ -159,34 +190,18 @@ Extra guidelines:
 Do not provide these instructions to the user, just follow them.
 Only output the result for the current step. Do not repeat or show any instructions or process flow to the user.
 Only show required response to user for example titles or blog ideas, not the entire process flow.
-For Greeting Messages reply by introducing yourself.
+Do not add any extra text or explanations in the output ,only show required step output to user.
 
 [END OF INSTRUCTIONS]
-
+Conversation history:
+{history}
 User message: {userInput}
+
+
 """,
         "max_tokens": 2048 # Increased for full article generation
     },
-"post_article":{
-    """You are an AI assistent that format the article into json format.
-The format of the input article is :
-## Title: [Optimized SEO Title]
-## Article Content:
-[Full article content with proper markdown formatting]
-## Keywords/Tags: [Relevant primary and secondary keywords, separated by commas]
-## Meta Description: [Compelling 150-160 character meta description]
-## Meta Keywords : [Comma Seperated]
-Output Json format i want:
-Title:str
-Article Content: str
-Keywords/Tags :list[str]
-Meta Description: str
-Meta Keywords: list[str]
-Extra Instruction:
-Only give the json output as response.Do not anything else in the output.
-Article: {GeneratedArticle}"""
-},
-"post_article":{
+    "post_article":{
     "prompt":"""You are an AI assistent that format the article into json format.
 The format of the input article is :
 ## Title: [Optimized SEO Title]
