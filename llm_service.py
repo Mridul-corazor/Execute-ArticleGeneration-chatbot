@@ -72,20 +72,6 @@ conversations = {}  # Key: conversation_id, Value: Conversation object
 
 
 def call_gemini(conversation_id, prompt_key, context_vars=None, max_tok=None, use_history=True):
-    """
-    Calls the Gemini API with a structured prompt, incorporating conversation history,
-    and managing individual conversations.
-
-    Args:
-        conversation_id (str): A unique identifier for the conversation.
-        prompt_key (str): The key for the desired prompt in the PROMPTS dictionary.
-        context_vars (dict, optional): Variables to format the prompt string. Defaults to None.
-        max_tok (int, optional): Overrides the default max_output_tokens. Defaults to None.
-        use_history (bool, optional): Whether to include conversation history in the prompt. Defaults to True.
-
-    Returns:
-        str: The generated text from the model or an error message.
-    """
     try:
         if prompt_key not in PROMPTS:
             return f"⚠️ Error: Prompt key '{prompt_key}' not found."
@@ -98,20 +84,20 @@ def call_gemini(conversation_id, prompt_key, context_vars=None, max_tok=None, us
         prompt_config = PROMPTS[prompt_key]
         prompt_template = prompt_config["prompt"]
 
-        # Format the prompt with context variables if provided
-        if context_vars:
-            final_prompt = prompt_template.format(**context_vars)
-        else:
-            final_prompt = prompt_template
-
-
         # Incorporate conversation history if requested
         if use_history:
             history_string = conversation.get_history_as_string()
-            final_prompt = f"{history_string}\n{final_prompt}"  # Add history to the beginning of the prompt
-            # This is a basic approach. You may need to refine the prompt to make better use of the history.
+            if context_vars is None:
+                context_vars = {}
+            context_vars["history"] = history_string
+        else:
+            if context_vars is None:
+                context_vars = {}
+            if "history" not in context_vars:
+                context_vars["history"] = ""
 
-
+        # Format the prompt with all context variables (including history)
+        final_prompt = prompt_template.format(**context_vars)
 
         # Determine max tokens
         max_output_tokens = max_tok if max_tok is not None else prompt_config["max_tokens"]
@@ -124,17 +110,14 @@ def call_gemini(conversation_id, prompt_key, context_vars=None, max_tok=None, us
         response_text = response.text.strip()
 
         # Update conversation history
-        user_input = context_vars.get("user_input") if context_vars and "user_input" in context_vars else final_prompt #If we didn't have a prompt specifically for the user use the whole thing
+        user_input = context_vars.get("userInput") if context_vars and "userInput" in context_vars else ""
         conversation.add_message("user", user_input)
         conversation.add_message("model", response_text)
-
 
         return response_text
 
     except Exception as e:
         return f"⚠️ An error occurred with the Gemini API: {e}"
-
-
 def close_conversation(conversation_id):
     """
     Closes a conversation and clears its history.
@@ -148,6 +131,3 @@ def close_conversation(conversation_id):
         print(f"Conversation {conversation_id} closed and history cleared.")
     else:
         print(f"Conversation {conversation_id} not found.")
-
-
-
